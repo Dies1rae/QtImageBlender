@@ -34,18 +34,21 @@ private slots:
 
     void on_bModeSource_clicked();
 
-    void on_radioButton_2_clicked();
+    void on_bModeDest_clicked();
+
+    void on_cLimitSize_stateChanged(int arg1);
 
 private:
+    bool SizeChecker(const QImage& img);
+
     Ui::MainWindow *ui;
     QString path_img_one_;
     QString path_img_two_;
     QString path_img_res_;
-
     QImage img_one_;
     QImage img_two_;
     QImage img_res_;
-
-    bool com_mode = false;
+    bool com_mode_ = false;
+    bool size_mode_ = false;
 };
 #endif // MAINWINDOW_H

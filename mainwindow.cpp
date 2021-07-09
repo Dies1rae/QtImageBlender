@@ -6,7 +6,6 @@
 #include <QDesktopWidget>
 #include <QStyle>
 #include <algorithm>
-#include <string>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -43,9 +42,18 @@ void MainWindow::on_bLoadOne_clicked()
 {
     this->path_img_one_ = QFileDialog::getOpenFileName(this, tr("Open File"), "c:/", "JPEG/JPG Files (*.jpeg, *.jpg);; PNG File (*.png);; BMP File (*.bmp);; All files (*.*)");
     if (!this->path_img_one_.isNull() && !this->path_img_one_.isEmpty()) {
-        this->img_one_.load(this->path_img_one_);
-        this->img_one_ = this->img_one_.convertToFormat(QImage::Format_ARGB32);
-        ui->vIMG1->setPixmap(QPixmap::fromImage(this->img_one_));
+        QImage tmp_img(this->path_img_one_);
+        if (this->size_mode_) {
+            this->img_one_ = std::move(tmp_img);
+            this->img_one_ = this->img_one_.convertToFormat(QImage::Format_ARGB32);
+            ui->vIMG1->setPixmap(QPixmap::fromImage(this->img_one_));
+        } else if (!this->SizeChecker(tmp_img)) {
+            this->img_one_ = std::move(tmp_img);
+            this->img_one_ = this->img_one_.convertToFormat(QImage::Format_ARGB32);
+            ui->vIMG1->setPixmap(QPixmap::fromImage(this->img_one_));
+        } else if (this->SizeChecker(tmp_img)) {
+            QMessageBox::information(this, tr("Info"),  "Image is too big");
+        }
     }
     if (this->img_one_.isNull()) {
         QMessageBox::information(this, tr("Info"),  "No image loaded");
@@ -56,9 +64,18 @@ void MainWindow::on_bLoadTwo_clicked()
 {
     this->path_img_two_ = QFileDialog::getOpenFileName(this, tr("Open File"), "c:/", "JPEG/JPG Files (*.jpeg, *.jpg);; PNG File (*.png);; BMP File (*.bmp);; All files (*.*)");
     if (!this->path_img_two_.isNull() && !this->path_img_two_.isEmpty()) {
-        this->img_two_.load(this->path_img_two_);
-        this->img_two_ = this->img_two_.convertToFormat(QImage::Format_ARGB32);
-        ui->vIMG2->setPixmap(QPixmap::fromImage(this->img_two_));
+        QImage tmp_img(this->path_img_one_);
+        if (this->size_mode_) {
+            this->img_two_.load(this->path_img_two_);
+            this->img_two_ = this->img_two_.convertToFormat(QImage::Format_ARGB32);
+            ui->vIMG2->setPixmap(QPixmap::fromImage(this->img_two_));
+        } else if (!this->SizeChecker(tmp_img)) {
+            this->img_two_.load(this->path_img_two_);
+            this->img_two_ = this->img_two_.convertToFormat(QImage::Format_ARGB32);
+            ui->vIMG2->setPixmap(QPixmap::fromImage(this->img_two_));
+        } else if (this->SizeChecker(tmp_img)) {
+            QMessageBox::information(this, tr("Info"),  "Image is too big");
+        }
     }
     if (this->img_two_.isNull()) {
         QMessageBox::information(this, tr("Info"),  "No image loaded");
@@ -73,7 +90,7 @@ void MainWindow::on_bMIXIT_clicked()
         QImage result({w_max, h_max}, QImage::Format_ARGB32);
         QPainter painter(&result);
         painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
-        if (this->com_mode) {
+        if (this->com_mode_) {
             painter.setCompositionMode(QPainter::CompositionMode_DestinationOver);
         }
 
@@ -141,10 +158,27 @@ void MainWindow::on_actionAbout_triggered()
 
 void MainWindow::on_bModeSource_clicked()
 {
-    this->com_mode = false;
+    this->com_mode_ = false;
 }
 
-void MainWindow::on_radioButton_2_clicked()
+void MainWindow::on_bModeDest_clicked()
 {
-    this->com_mode = true;
+    this->com_mode_ = true;
+}
+
+bool MainWindow::SizeChecker(const QImage& img)
+{
+    if(img.width() > 1024 || img.height() > 1024) {
+        return true;
+    }
+    return false;
+}
+
+void MainWindow::on_cLimitSize_stateChanged(int arg1)
+{
+    if(arg1 > 0){
+        this->size_mode_ = false;
+    } else {
+        this->size_mode_ = true;
+    }
 }
